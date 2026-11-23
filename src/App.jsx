@@ -65,7 +65,11 @@ const DevSyncApp = ({ isInterviewMode }) => {
         const states = Array.from(awareness.getStates().values());
         const requests = states
           .filter(state => state.user && state.user.requesting)
-          .map(state => ({ username: state.user.name, clientId: state.user.clientId || Math.random() }));
+          .map(state => ({
+            username: state.user.name,
+            displayName: state.user.displayName || state.user.name,
+            clientId: state.user.clientId || Math.random()
+          }));
         
         const uniqueRequests = [];
         const seenEmails = new Set();
@@ -468,7 +472,7 @@ const ProtectedContent = ({ session }) => {
 
 const AppContent = ({ session }) => {
   return (
-    <CollaborationProvider roomId={session.roomId} email={session.email}>
+    <CollaborationProvider roomId={session.roomId} email={session.email} displayName={session.displayName}>
       <ProtectedContent session={session} />
     </CollaborationProvider>
   );
@@ -477,12 +481,12 @@ const AppContent = ({ session }) => {
 export default function App() {
   const [session, setSession] = useState(null);
 
-  const handleEnter = ({ roomId, email, template, isHost, isInterviewMode }) => {
+  const handleEnter = ({ roomId, email, displayName, template, isHost, isInterviewMode }) => {
     const url = new URL(window.location.href);
     url.searchParams.set('room', roomId);
     if (isInterviewMode) url.searchParams.set('interview', '1');
     window.history.replaceState({}, '', url.toString());
-    setSession({ roomId, email, template, isHost, isInterviewMode });
+    setSession({ roomId, email, displayName, template, isHost, isInterviewMode });
   };
 
   if (!session) {

@@ -22,6 +22,7 @@ const DEFAULT_WORKSPACES = [
 
 export const LandingPage = ({ onEnter }) => {
   const [step, setStep] = useState('home'); // home | create-name | create-workspace | create-link | join
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [workspaceName, setWorkspaceName] = useState('');
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
@@ -29,6 +30,7 @@ export const LandingPage = ({ onEnter }) => {
   const [joinLink, setJoinLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [joinInput, setJoinInput] = useState('');
+  const [joinName, setJoinName] = useState('');
   const [joinEmail, setJoinEmail] = useState('');
 
   // Check if joining from a shared link (e.g. ?room=xxx&interview=1)
@@ -48,7 +50,13 @@ export const LandingPage = ({ onEnter }) => {
     }
   }, []);
 
+  const isHomeValid = Boolean(name.trim() && email.trim() && email.includes('@'));
+
   const handleCreateWorkspace = () => {
+    if (!name.trim()) {
+      alert("Please enter your name.");
+      return;
+    }
     if (!email.trim() || !email.includes('@')) {
       alert("Please enter a valid email address.");
       return;
@@ -83,10 +91,15 @@ export const LandingPage = ({ onEnter }) => {
   const [isInterviewMode, setIsInterviewMode] = useState(false);
 
   const handleLaunchIDE = () => {
-    onEnter({ roomId, email, template: selectedWorkspace, isHost: true, isInterviewMode });
+    const resolvedName = name.trim() || email.trim().split('@')[0];
+    onEnter({ roomId, email: email.trim(), displayName: resolvedName, template: selectedWorkspace, isHost: true, isInterviewMode });
   };
 
   const handleJoinSubmit = () => {
+    if (!joinName.trim()) {
+      alert("Please enter your name.");
+      return;
+    }
     if (!joinEmail.trim() || !joinInput.trim() || !joinEmail.includes('@')) {
       if (!joinEmail.includes('@')) alert("Please enter a valid email address.");
       return;
@@ -99,7 +112,13 @@ export const LandingPage = ({ onEnter }) => {
       parsedRoom = url.searchParams.get('room') || parsedRoom;
       if (url.searchParams.get('interview') === '1') parsedIsInterview = true;
     } catch (_) {}
-    onEnter({ roomId: parsedRoom, email: joinEmail.trim(), isHost: false, isInterviewMode: parsedIsInterview });
+    onEnter({
+      roomId: parsedRoom,
+      email: joinEmail.trim(),
+      displayName: joinName.trim(),
+      isHost: false,
+      isInterviewMode: parsedIsInterview
+    });
   };
 
   const particles = Array.from({ length: 20 }).map((_, i) => ({
@@ -171,8 +190,22 @@ export const LandingPage = ({ onEnter }) => {
               </div>
             </motion.div>
 
-            {/* Email first */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} style={{ width: '100%' }}>
+            {/* Name & Email */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleCreateWorkspace()}
+                placeholder="Your name"
+                style={{
+                  width: '100%', padding: '14px 20px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 12, color: 'white', fontSize: 16, outline: 'none', boxSizing: 'border-box',
+                  transition: 'border-color 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#007acc'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+              />
               <input
                 type="email"
                 value={email}
@@ -193,17 +226,21 @@ export const LandingPage = ({ onEnter }) => {
               <div style={{ display: 'flex', gap: 12, width: '100%', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', gap: 12, width: '100%', flexWrap: 'wrap' }}>
                   <motion.button whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(0,122,204,0.5)' }} whileTap={{ scale: 0.97 }}
-                    onClick={() => { setIsInterviewMode(false); handleCreateWorkspace(); }} disabled={!email.trim() || !email.includes('@')}
+                    onClick={() => { setIsInterviewMode(false); handleCreateWorkspace(); }} disabled={!isHomeValid}
                     style={{
-                      flex: '1 1 160px', padding: '14px 20px', background: (email.trim() && email.includes('@')) ? 'linear-gradient(135deg, #007acc, #0062a3)' : 'rgba(255,255,255,0.05)',
-                      border: 'none', borderRadius: 14, color: (email.trim() && email.includes('@')) ? 'white' : '#555', fontSize: 14, fontWeight: 700,
-                      cursor: (email.trim() && email.includes('@')) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      flex: '1 1 160px', padding: '14px 20px', background: isHomeValid ? 'linear-gradient(135deg, #007acc, #0062a3)' : 'rgba(255,255,255,0.05)',
+                      border: 'none', borderRadius: 14, color: isHomeValid ? 'white' : '#555', fontSize: 14, fontWeight: 700,
+                      cursor: isHomeValid ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                       transition: 'all 0.2s',
                     }}>
                     <Plus size={18} /> Create Workspace
                   </motion.button>
                   <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => setStep('join')}
+                    onClick={() => {
+                      if (name.trim() && !joinName.trim()) setJoinName(name.trim());
+                      if (email.trim() && !joinEmail.trim()) setJoinEmail(email.trim());
+                      setStep('join');
+                    }}
                     style={{
                       flex: '1 1 160px', padding: '14px 20px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
                       borderRadius: 14, color: '#cccccc', fontSize: 14, fontWeight: 700, cursor: 'pointer',
@@ -217,26 +254,26 @@ export const LandingPage = ({ onEnter }) => {
                   whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(124,111,255,0.5)' }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => {
-                    if (!email.trim() || !email.includes('@')) {
-                      alert('Please enter your email first.');
+                    if (!isHomeValid) {
+                      alert('Please enter your name and valid email first.');
                       return;
                     }
                     setIsInterviewMode(true);
                     handleCreateWorkspace();
                   }}
-                  disabled={!email.trim() || !email.includes('@')}
+                  disabled={!isHomeValid}
                   style={{
                     width: '100%', padding: '13px 20px',
-                    background: (email.trim() && email.includes('@'))
+                    background: isHomeValid
                       ? 'linear-gradient(135deg, #7c6fff22, #5e4dff22)'
                       : 'rgba(255,255,255,0.03)',
-                    border: (email.trim() && email.includes('@'))
+                    border: isHomeValid
                       ? '1px solid #7c6fff60'
                       : '1px solid rgba(255,255,255,0.08)',
                     borderRadius: 14,
-                    color: (email.trim() && email.includes('@')) ? '#a89eff' : '#444',
+                    color: isHomeValid ? '#a89eff' : '#444',
                     fontSize: 14, fontWeight: 700,
-                    cursor: (email.trim() && email.includes('@')) ? 'pointer' : 'not-allowed',
+                    cursor: isHomeValid ? 'pointer' : 'not-allowed',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     transition: 'all 0.2s',
                   }}
@@ -272,7 +309,7 @@ export const LandingPage = ({ onEnter }) => {
               <button onClick={handleGoHome} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', padding: 4 }}><X size={20} /></button>
               <div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: 'white' }}>Choose a Workspace</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Select a project folder to start your session, <span style={{ color: '#007acc' }}>{email}</span></div>
+                <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Select a project folder to start your session, <span style={{ color: '#007acc' }}>{name.trim() || email}</span></div>
               </div>
             </div>
 
@@ -397,9 +434,23 @@ export const LandingPage = ({ onEnter }) => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <input
+                type="text"
+                value={joinName}
+                onChange={e => setJoinName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleJoinSubmit()}
+                placeholder="Your name"
+                style={{
+                  padding: '14px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                  borderRadius: 12, color: 'white', fontSize: 15, outline: 'none',
+                }}
+                onFocus={e => e.target.style.borderColor = '#007acc'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+              />
+              <input
                 type="email"
                 value={joinEmail}
                 onChange={e => setJoinEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleJoinSubmit()}
                 placeholder="Your email address"
                 style={{
                   padding: '14px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
@@ -425,11 +476,11 @@ export const LandingPage = ({ onEnter }) => {
             </div>
 
             <motion.button whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(0,122,204,0.4)' }} whileTap={{ scale: 0.97 }}
-              onClick={handleJoinSubmit} disabled={!joinInput.trim() || !joinEmail.trim() || !joinEmail.includes('@')}
+              onClick={handleJoinSubmit} disabled={!joinName.trim() || !joinInput.trim() || !joinEmail.trim() || !joinEmail.includes('@')}
               style={{
-                padding: '16px', background: joinInput.trim() && joinEmail.trim() && joinEmail.includes('@') ? 'linear-gradient(135deg, #007acc, #6366f1)' : 'rgba(255,255,255,0.05)',
-                border: 'none', borderRadius: 14, color: joinInput.trim() && joinEmail.trim() && joinEmail.includes('@') ? 'white' : '#555',
-                fontSize: 16, fontWeight: 700, cursor: joinInput.trim() && joinEmail.trim() && joinEmail.includes('@') ? 'pointer' : 'not-allowed',
+                padding: '16px', background: joinName.trim() && joinInput.trim() && joinEmail.trim() && joinEmail.includes('@') ? 'linear-gradient(135deg, #007acc, #6366f1)' : 'rgba(255,255,255,0.05)',
+                border: 'none', borderRadius: 14, color: joinName.trim() && joinInput.trim() && joinEmail.trim() && joinEmail.includes('@') ? 'white' : '#555',
+                fontSize: 16, fontWeight: 700, cursor: joinName.trim() && joinInput.trim() && joinEmail.trim() && joinEmail.includes('@') ? 'pointer' : 'not-allowed',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
               }}>
               <Users size={20} /> Join Workspace

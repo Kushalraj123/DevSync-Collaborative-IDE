@@ -6,7 +6,7 @@ export const AccessRequestModal = ({ requests, onApprove, onReject }) => {
   if (requests.length === 0) return null;
 
   return (
-    <div className="fixed top-6 right-6 z-1000 flex flex-col gap-3 w-80">
+    <div className="fixed top-4 right-3 left-3 sm:left-auto sm:top-6 sm:right-6 z-1000 flex flex-col gap-3 sm:w-80">
       <AnimatePresence>
         {requests.map((req) => (
           <motion.div
@@ -22,7 +22,9 @@ export const AccessRequestModal = ({ requests, onApprove, onReject }) => {
                 <UserPlus size={20} className="text-[#007acc]" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-white text-sm font-bold truncate">Join Request</h4>
+                <h4 className="text-white text-sm font-bold truncate">
+                  {req.displayName && req.displayName !== req.username ? req.displayName : 'Join Request'}
+                </h4>
                 <p className="text-[#858585] text-xs truncate mb-3">{req.username}</p>
                 <div className="flex gap-2">
                   <button

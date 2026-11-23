@@ -16,7 +16,7 @@ export const ActivityBar = () => {
     editorSettings, updateEditorSetting, resetEditorSettings
   } = useEditor();
 
-  const { connected, roomId, awareness } = useCollaboration();
+  const { connected, roomId, awareness, displayName } = useCollaboration();
   const { isHost, userRole } = useAuth();
 
   const [openPopover, setOpenPopover] = useState(null); // null | 'account' | 'settings'
@@ -164,10 +164,13 @@ export const ActivityBar = () => {
                 className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
                 style={{ backgroundColor: myUser?.color || '#007acc' }}
               >
-                {(username || 'U').charAt(0).toUpperCase()}
+                {(displayName || username || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-white font-semibold truncate">{username || 'Guest'}</div>
+                <div className="text-white font-semibold truncate">{displayName || username || 'Guest'}</div>
+                {username && displayName !== username && (
+                  <div className="text-[#858585] text-[11px] truncate">{username}</div>
+                )}
                 <div className="flex items-center gap-2 mt-0.5 text-[11px]">
                   <span className="px-1.5 py-0.5 rounded bg-[#007acc30] text-[#4fc1ff] uppercase font-semibold">
                     {isHost ? 'HOST' : (userRole || 'editor').toUpperCase()}

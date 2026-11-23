@@ -264,12 +264,19 @@ export const Sidebar = () => {
                       onContextMenu={(e) => handleUserContextMenu(e, u)}
                       className="group flex flex-col p-2 rounded-lg hover:bg-[#2a2d2e] transition-colors cursor-context-menu"
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 text-[13px] text-[#cccccc] truncate">
+                      <div className="flex items-center justify-between gap-2" title={u.name}>
+                        <div className="flex items-center gap-2 text-[13px] text-[#cccccc] min-w-0">
                           <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: u.color }} />
-                          <span className="truncate">{u.name}{isMe ? ' (You)' : ''}</span>
+                          <div className="min-w-0">
+                            <div className="truncate font-medium text-[#e5e7eb]">
+                              {u.displayName || u.name}{isMe ? ' (You)' : ''}
+                            </div>
+                            {u.displayName && u.displayName !== u.name && (
+                              <div className="truncate text-[10px] text-[#858585]">{u.name}</div>
+                            )}
+                          </div>
                         </div>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${u.role === 'admin' ? 'bg-[#007acc40] text-[#007acc]' :
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${u.role === 'admin' ? 'bg-[#007acc40] text-[#007acc]' :
                           u.role === 'editor' ? 'bg-[#23863620] text-[#238636]' :
                             'bg-[#f4433620] text-[#f44336]'
                           }`}>
@@ -327,10 +334,12 @@ export const Sidebar = () => {
             <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 mt-2">
               {messages.map((msg, i) => {
                 const isMe = msg.username === username;
+                const senderUser = awarenessUsers.find(u => u.name === msg.username);
+                const senderLabel = msg.displayName || senderUser?.displayName || msg.username;
                 return (
                   <div key={i} className={`flex flex-col text-[13px] ${isMe ? 'items-end' : 'items-start'}`}>
                     <span className="font-bold mb-1 text-[11px]" style={{ color: msg.color || '#007acc' }}>
-                      {msg.username}
+                      {senderLabel}
                     </span>
                     <div className={`px-3 py-2 rounded-xl max-w-[90%] shadow-sm ${isMe ? 'bg-[#007acc] text-white rounded-tr-none' : 'bg-[#2d2d2d] text-[#e0e0e0] border border-[#404040] rounded-tl-none'}`}>
                       {msg.text}

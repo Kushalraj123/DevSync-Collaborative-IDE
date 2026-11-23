@@ -5,10 +5,12 @@ import randomColor from 'randomcolor';
 
 const CollaborationContext = createContext();
 
-export const CollaborationProvider = ({ children, roomId, email }) => {
+export const CollaborationProvider = ({ children, roomId, email, displayName }) => {
   const [provider, setProvider] = useState(null);
   const [awareness, setAwareness] = useState(null);
   const [connected, setConnected] = useState(false);
+
+  const resolvedDisplayName = (displayName || '').trim() || (email || '').split('@')[0];
 
   // Initialize Y.Doc once per room using useState to avoid Strict Mode issues
   const [ydoc] = useState(() => new Y.Doc());
@@ -60,6 +62,7 @@ export const CollaborationProvider = ({ children, roomId, email }) => {
     
     awarenessState.setLocalStateField('user', {
       name: email,
+      displayName: resolvedDisplayName,
       color: userColor,
       role: 'viewer' // Default to viewer
     });
@@ -72,7 +75,7 @@ export const CollaborationProvider = ({ children, roomId, email }) => {
       // Note: We DO NOT destroy ydoc here because React Strict Mode 
       // will destroy it immediately on the first dummy unmount!
     };
-  }, [roomId, email, ydoc]);
+  }, [roomId, email, resolvedDisplayName, ydoc]);
 
   return (
     <CollaborationContext.Provider value={{
@@ -82,6 +85,7 @@ export const CollaborationProvider = ({ children, roomId, email }) => {
       connected,
       sharedFiles,
       roomId,
+      displayName: resolvedDisplayName,
       username: email // Export email as 'username' to avoid breaking consumer components
     }}>
       {awareness ? children : (

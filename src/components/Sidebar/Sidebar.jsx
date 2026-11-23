@@ -31,14 +31,20 @@ export const Sidebar = () => {
   const [localNewNodeName, setLocalNewNodeName] = React.useState('');
   const [userMenu, setUserMenu] = React.useState({ visible: false, x: 0, y: 0, targetUser: null });
 
+  const canManageRoles = isHost || userRole === 'admin';
+
   const handleUserContextMenu = (e, u) => {
-    if (!isHost || u.name === username) return;
+    const hostEmail = ydoc?.getMap('auth')?.get('__host__');
+    if (!canManageRoles || u.name === username || (hostEmail && u.name === hostEmail)) return;
     e.preventDefault();
     e.stopPropagation();
-    setUserMenu({ visible: true, x: e.clientX, y: e.clientY, targetUser: u });
+    const clampedX = Math.min(e.clientX, window.innerWidth - 180);
+    const clampedY = Math.min(e.clientY, window.innerHeight - 190);
+    setUserMenu({ visible: true, x: Math.max(8, clampedX), y: Math.max(8, clampedY), targetUser: u });
   };
 
-  const handleRoleChange = (role) => {
+  const handleRoleChange = (e, role) => {
+    e.stopPropagation();
     if (userMenu.targetUser) {
       const authMap = ydoc.getMap('auth');
       authMap.set(userMenu.targetUser.name, role);
@@ -278,7 +284,8 @@ export const Sidebar = () => {
               {/* User Context Menu */}
               {userMenu.visible && (
                 <div
-                  className="fixed bg-[#252526] border border-[#454545] shadow-xl py-1 min-w-[160px] rounded-md z-50 text-[13px]"
+                  onClick={(e) => e.stopPropagation()}
+                  className="fixed bg-[#252526] border border-[#454545] shadow-xl py-1 min-w-[160px] rounded-md z-[120] text-[13px]"
                   style={{ top: userMenu.y, left: userMenu.x }}
                 >
                   <div className="px-3 py-1.5 text-[#858585] border-b border-[#454545] text-[11px] uppercase font-bold truncate">
@@ -286,26 +293,26 @@ export const Sidebar = () => {
                   </div>
                   <div
                     className="px-3 py-1.5 text-[#cccccc] hover:bg-[#007acc] hover:text-white cursor-pointer"
-                    onClick={() => handleRoleChange('admin')}
+                    onClick={(e) => handleRoleChange(e, 'admin')}
                   >
                     Make Admin
                   </div>
                   <div
                     className="px-3 py-1.5 text-[#cccccc] hover:bg-[#007acc] hover:text-white cursor-pointer"
-                    onClick={() => handleRoleChange('editor')}
+                    onClick={(e) => handleRoleChange(e, 'editor')}
                   >
                     Make Editor
                   </div>
                   <div
                     className="px-3 py-1.5 text-[#cccccc] hover:bg-[#007acc] hover:text-white cursor-pointer"
-                    onClick={() => handleRoleChange('viewer')}
+                    onClick={(e) => handleRoleChange(e, 'viewer')}
                   >
                     Make Viewer
                   </div>
                   <div className="h-px bg-[#454545] my-1" />
                   <div
                     className="px-3 py-1.5 text-[#f44336] hover:bg-[#f44336] hover:text-white cursor-pointer"
-                    onClick={() => handleRoleChange('rejected')}
+                    onClick={(e) => handleRoleChange(e, 'rejected')}
                   >
                     Kick from Workspace
                   </div>

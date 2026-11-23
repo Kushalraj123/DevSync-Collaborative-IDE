@@ -35,7 +35,8 @@ const DevSyncApp = ({ isInterviewMode }) => {
   const [interviewerNotesOpen, setInterviewerNotesOpen] = useState(false);
 
   const { ydoc, awareness, username: email } = useCollaboration();
-  const { isHost, pendingRequests, setPendingRequests } = useAuth();
+  const { isHost, userRole, pendingRequests, setPendingRequests } = useAuth();
+  const canManageRoom = isHost || userRole === 'admin';
 
   // ── Real WebRTC voice + video call ────────────────────────────────────────
   const [rtcIncomingCall, setRtcIncomingCall] = useState(null);
@@ -59,7 +60,7 @@ const DevSyncApp = ({ isInterviewMode }) => {
   }, [startCall, startVideoCall]);
 
   useEffect(() => {
-    if (awareness && isHost) {
+    if (awareness && canManageRoom) {
       const handleAwarenessChange = () => {
         const states = Array.from(awareness.getStates().values());
         const requests = states
@@ -77,10 +78,11 @@ const DevSyncApp = ({ isInterviewMode }) => {
         setPendingRequests(uniqueRequests);
       };
       
+      handleAwarenessChange();
       awareness.on('change', handleAwarenessChange);
       return () => awareness.off('change', handleAwarenessChange);
     }
-  }, [awareness, isHost, setPendingRequests]);
+  }, [awareness, canManageRoom, setPendingRequests]);
 
   const handleApprove = (guestEmail) => {
     const authMap = ydoc.getMap('auth');
@@ -380,22 +382,26 @@ const ProtectedContent = ({ session }) => {
       const authMap = ydoc.getMap('auth');
       
       if (session.isHost) {
+        authMap.set('__host__', session.email);
         authMap.set(session.email, 'admin');
         setIsAuthorized(true);
         setUserRole('admin');
       } else {
         const checkAuth = () => {
-          const role = authMap.get(session.email);
-          
-          if (role === 'admin' && !session.isHost) {
-            // Prevent hijacking host email
+          const hostEmail = authMap.get('__host__');
+          if (hostEmail && hostEmail === session.email) {
+            // Prevent hijacking the room host's email
+            setIsAuthorized(false);
             setStatus('rejected');
             return;
           }
 
+          const role = authMap.get(session.email);
+
           if (role === 'editor' || role === 'admin' || role === 'viewer') {
             setIsAuthorized(true);
             setUserRole(role);
+            setStatus('approved');
             
             // Clear requesting flag once authorized
             if (awareness) {
@@ -408,6 +414,7 @@ const ProtectedContent = ({ session }) => {
               }
             }
           } else if (role === 'rejected') {
+            setIsAuthorized(false);
             setStatus('rejected');
           }
         };

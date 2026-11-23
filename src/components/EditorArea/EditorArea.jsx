@@ -51,6 +51,12 @@ export const EditorArea = () => {
     return map[ext] || 'plaintext';
   };
 
+  useEffect(() => {
+    if (editorRef.current) {
+      editorRef.current.updateOptions({ readOnly: userRole === 'viewer' });
+    }
+  }, [userRole]);
+
   const handleEditorMount = (editor) => {
     editorRef.current = editor;
     

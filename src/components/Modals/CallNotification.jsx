@@ -11,7 +11,7 @@ export const CallNotification = ({ incomingCall, username, onAccept, onAcceptMut
 
   return (
     <AnimatePresence>
-      <div className="fixed top-6 right-6 z-9999 flex flex-col gap-3 w-80">
+      <div className="fixed top-4 right-3 left-3 sm:left-auto sm:top-6 sm:right-6 z-9999 flex flex-col gap-3 sm:w-80">
         <motion.div
           initial={{ opacity: 0, x: 60, scale: 0.9 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -41,7 +41,9 @@ export const CallNotification = ({ incomingCall, username, onAccept, onAcceptMut
             </div>
 
             <div className="flex-1 min-w-0">
-              <h4 className="text-white text-sm font-bold">Incoming Call</h4>
+              <h4 className="text-white text-sm font-bold">
+                {incomingCall.withVideo ? 'Incoming Video Call' : 'Incoming Voice Call'}
+              </h4>
               <p className="text-[#858585] text-xs truncate mb-3">
                 <span className="text-[#2ea043] font-semibold">{callerName}</span> is ringing…
               </p>

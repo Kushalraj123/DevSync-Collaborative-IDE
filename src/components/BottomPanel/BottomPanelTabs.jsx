@@ -16,14 +16,14 @@ export const BottomPanelTabs = () => {
 
   return (
     <div className="flex bg-[#1e1e1e] h-[35px] shrink-0 w-full relative group/tabs">
-      <div className="flex-1 flex overflow-x-auto no-scrollbar border-b border-[#2d2d2d]">
+      <div className="flex-1 flex overflow-x-auto no-scrollbar border-b border-[#2d2d2d] pr-16">
         {tabs.map((tab) => {
           const isActive = bottomPanelTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setBottomPanelTab(tab.id)}
-              className={`relative flex items-center gap-1.5 px-3 h-full text-[12px] cursor-pointer tracking-wide ${isActive ? 'text-white' : 'text-[#cccccc] hover:text-white'
+              className={`relative flex items-center gap-1.5 px-3 h-full text-[12px] cursor-pointer tracking-wide whitespace-nowrap shrink-0 ${isActive ? 'text-white' : 'text-[#cccccc] hover:text-white'
                 }`}
             >
               {isActive && <div className="absolute top-0 left-0 w-full h-1px bg-[#007acc]" />}
@@ -38,7 +38,7 @@ export const BottomPanelTabs = () => {
       </div>
 
       {/* Global Bottom Panel Toolbar (far right) */}
-      <div className="absolute right-4 top-0 h-full flex items-center gap-2">
+      <div className="absolute right-0 top-0 h-full flex items-center gap-2 bg-[#1e1e1e] pl-2 pr-3 border-b border-[#2d2d2d]">
         <button className="text-[#cccccc] hover:text-white p-0.5 rounded cursor-pointer" title="Maximize Panel Size">
           <ChevronUp size={16} />
         </button>

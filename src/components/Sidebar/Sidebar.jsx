@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, ChevronRight, FileCode, Folder as FolderIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileCode, Folder as FolderIcon, X } from 'lucide-react';
 import { useEditor } from '../../context/EditorContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCollaboration } from '../../context/CollaborationContext';
@@ -14,8 +14,15 @@ export const Sidebar = () => {
     renamingNodeId, setRenamingNodeId, renameValue, setRenameValue,
     emitFileSystemUpdate, activeFileId, openFileById,
     awarenessUsers, messages, sendMessage, username,
-    roomId
+    roomId, setIsSidebarOpen
   } = useEditor();
+
+  const handleOpenFile = (id) => {
+    openFileById(id);
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   const { ydoc } = useCollaboration();
   const { isHost, userRole } = useAuth();
@@ -142,7 +149,7 @@ export const Sidebar = () => {
               onClick={(e) => {
                 e.stopPropagation();
                 if (renamingNodeId === node.id) return;
-                node.isFolder ? toggleFolder(node.id) : openFileById(node.id);
+                node.isFolder ? toggleFolder(node.id) : handleOpenFile(node.id);
               }}
               style={{ paddingLeft: `${(depth * 14) + 8}px` }}
               className={`group flex items-center gap-1.5 py-[3px] pr-2 cursor-pointer ${activeFileId === node.id ? 'bg-(--vscode-list-active) text-white' : 'text-(--vscode-text-main) hover:bg-(--vscode-list-hover)'
@@ -207,7 +214,7 @@ export const Sidebar = () => {
               <span className="text-[11px] font-bold tracking-wide uppercase flex items-center gap-1">
                 <ChevronDown size={14} /> HACKATHON
               </span>
-              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+              <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center gap-1">
                 <button onClick={(e) => { e.stopPropagation(); setCreatingNode({ active: true, type: 'file', parentId: null }); setLocalNewNodeName(''); }} className="p-0.5 hover:bg-[#454545] rounded" title="New File">
                   <FileCode size={14} className="text-[#cccccc]" />
                 </button>
@@ -354,8 +361,15 @@ export const Sidebar = () => {
 
   return (
     <div className="sidebar bg-(--vscode-sidebar) border-r border-(--vscode-border) flex flex-col h-full overflow-hidden">
-      <div className="px-4 py-3 text-[11px] uppercase tracking-wider text-[#cccccc]">
-        {activeSidebarTab === 'explorer' ? 'Explorer' : activeSidebarTab === 'search' ? 'Search' : 'Chat'}
+      <div className="px-4 py-3 text-[11px] uppercase tracking-wider text-[#cccccc] flex items-center justify-between">
+        <span>{activeSidebarTab === 'explorer' ? 'Explorer' : activeSidebarTab === 'search' ? 'Search' : activeSidebarTab === 'extensions' ? 'Extensions' : 'Chat'}</span>
+        <button
+          onClick={() => setIsSidebarOpen(false)}
+          className="md:hidden p-1 -mr-1 text-[#858585] hover:text-white rounded cursor-pointer"
+          title="Close Sidebar"
+        >
+          <X size={16} />
+        </button>
       </div>
       {renderContent()}
     </div>

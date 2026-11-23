@@ -113,9 +113,10 @@ export const LandingPage = ({ onEnter }) => {
 
   return (
     <div style={{
-      minHeight: '100vh', width: '100vw', background: 'linear-gradient(135deg, #0d0d1a 0%, #111827 50%, #0d1421 100%)',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Segoe UI', sans-serif", overflow: 'hidden', position: 'relative'
+      height: '100dvh', width: '100%', background: 'linear-gradient(135deg, #0d0d1a 0%, #111827 50%, #0d1421 100%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'safe center',
+      fontFamily: "'Segoe UI', sans-serif", overflowY: 'auto', overflowX: 'hidden', position: 'relative',
+      padding: '24px 0', boxSizing: 'border-box'
     }}>
       {/* Animated background particles */}
       {particles.map(p => (
@@ -190,11 +191,11 @@ export const LandingPage = ({ onEnter }) => {
 
               {/* Action buttons */}
               <div style={{ display: 'flex', gap: 12, width: '100%', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                <div style={{ display: 'flex', gap: 12, width: '100%', flexWrap: 'wrap' }}>
                   <motion.button whileHover={{ scale: 1.03, boxShadow: '0 0 30px rgba(0,122,204,0.5)' }} whileTap={{ scale: 0.97 }}
                     onClick={() => { setIsInterviewMode(false); handleCreateWorkspace(); }} disabled={!email.trim() || !email.includes('@')}
                     style={{
-                      flex: 1, padding: '14px 20px', background: (email.trim() && email.includes('@')) ? 'linear-gradient(135deg, #007acc, #0062a3)' : 'rgba(255,255,255,0.05)',
+                      flex: '1 1 160px', padding: '14px 20px', background: (email.trim() && email.includes('@')) ? 'linear-gradient(135deg, #007acc, #0062a3)' : 'rgba(255,255,255,0.05)',
                       border: 'none', borderRadius: 14, color: (email.trim() && email.includes('@')) ? 'white' : '#555', fontSize: 14, fontWeight: 700,
                       cursor: (email.trim() && email.includes('@')) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                       transition: 'all 0.2s',
@@ -204,7 +205,7 @@ export const LandingPage = ({ onEnter }) => {
                   <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                     onClick={() => setStep('join')}
                     style={{
-                      flex: 1, padding: '14px 20px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
+                      flex: '1 1 160px', padding: '14px 20px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
                       borderRadius: 14, color: '#cccccc', fontSize: 14, fontWeight: 700, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     }}>
@@ -250,7 +251,7 @@ export const LandingPage = ({ onEnter }) => {
 
             {/* Stats */}
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-              style={{ display: 'flex', gap: 32 }}>
+              style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[['CRDTs', 'Zero-conflict edits'], ['Yjs Sync', 'Real-time cursors'], ['Sandboxed', 'Code execution']].map(([title, sub]) => (
                 <div key={title} style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#007acc' }}>{title}</div>

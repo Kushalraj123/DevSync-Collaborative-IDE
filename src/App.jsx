@@ -17,11 +17,13 @@ import { InterviewerNotes } from './components/Interview/InterviewerNotes';
 import { CallNotification } from './components/Modals/CallNotification';
 import { VideoCallModal } from './components/Modals/VideoCallModal';
 import { useWebRTC } from './hooks/useWebRTC';
+import { useIsMobile } from './hooks/useIsMobile';
 import { BookOpen, StickyNote } from 'lucide-react';
 
 const DevSyncApp = ({ isInterviewMode }) => {
+  const isMobile = useIsMobile();
   const {
-    contextMenu, setContextMenu, isSidebarOpen,
+    contextMenu, setContextMenu, isSidebarOpen, setIsSidebarOpen,
     isBottomPanelOpen, files, emitFileSystemUpdate,
     setCreatingNode, setRenamingNodeId, setRenameValue, setActiveFileId,
     roomId, incomingCall, setIncomingCall, username, startVoiceCall
@@ -167,8 +169,8 @@ const DevSyncApp = ({ isInterviewMode }) => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
-        width: '100vw',
+        height: '100dvh',
+        width: '100%',
         overflow: 'hidden',
         background: '#1e1e1e',
         color: '#cccccc',
@@ -209,33 +211,72 @@ const DevSyncApp = ({ isInterviewMode }) => {
 
       <AccessRequestModal requests={pendingRequests} onApprove={handleApprove} onReject={handleReject} />
       <TopBar />
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0, position: 'relative' }}>
         <ActivityBar />
-        {isSidebarOpen && (
+
+        {/* Desktop Sidebar (inline + resizable) */}
+        {!isMobile && isSidebarOpen && (
           <div style={{ width: sidebarWidth, flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#252526' }}>
             <Sidebar />
           </div>
         )}
-        {isSidebarOpen && (
+        {!isMobile && isSidebarOpen && (
           <div
             onMouseDown={onSidebarMouseDown}
             style={{ width: 4, flexShrink: 0, cursor: 'col-resize', background: '#2d2d2d' }}
           />
         )}
+
+        {/* Mobile Sidebar (slide-over drawer + backdrop) */}
+        {isMobile && isSidebarOpen && (
+          <>
+            <div
+              onClick={() => setIsSidebarOpen(false)}
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 42,
+                background: 'rgba(0, 0, 0, 0.55)',
+                zIndex: 35,
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: 42,
+                width: 'min(82vw, 300px)',
+                maxWidth: 'calc(100% - 42px)',
+                zIndex: 40,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                background: '#252526',
+                boxShadow: '4px 0 24px rgba(0, 0, 0, 0.55)',
+              }}
+            >
+              <Sidebar />
+            </div>
+          </>
+        )}
+
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, position: 'relative' }}>
-          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
               <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
                 <EditorArea />
               </div>
-              {isBottomPanelOpen && (
+              {isBottomPanelOpen && !isMobile && (
                 <div
                   onMouseDown={onBottomMouseDown}
                   style={{ height: 4, flexShrink: 0, cursor: 'row-resize', background: '#2d2d2d' }}
                 />
               )}
               {isBottomPanelOpen && (
-                <div style={{ height: bottomHeight, flexShrink: 0, overflow: 'hidden' }}>
+                <div style={{ height: isMobile ? '42%' : bottomHeight, flexShrink: 0, overflow: 'hidden' }}>
                   <BottomPanel />
                 </div>
               )}
@@ -244,7 +285,19 @@ const DevSyncApp = ({ isInterviewMode }) => {
             {/* Interview Panel */}
             <AnimatePresence>
               {interviewPanelOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div
+                  style={isMobile ? {
+                    position: 'absolute',
+                    inset: 0,
+                    zIndex: 45,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: '#1e1e1e',
+                  } : {
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
                   <InterviewPanel isOpen={interviewPanelOpen} onToggle={() => setInterviewPanelOpen(false)} />
                   {isHost && (
                     <InterviewerNotes isOpen={interviewerNotesOpen} roomId={roomId} />
@@ -257,7 +310,7 @@ const DevSyncApp = ({ isInterviewMode }) => {
           {/* Interview mode floating toggle buttons */}
           {isInterviewMode && (
             <div style={{
-              position: 'absolute', top: 10, right: interviewPanelOpen ? 350 : 12,
+              position: 'absolute', top: 10, right: (!isMobile && interviewPanelOpen) ? 350 : 12,
               display: 'flex', flexDirection: 'column', gap: 8, zIndex: 50,
               transition: 'right 0.3s',
             }}>

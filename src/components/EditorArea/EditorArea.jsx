@@ -6,8 +6,10 @@ import { useCollaboration } from '../../context/CollaborationContext';
 import { useAuth } from '../../context/AuthContext';
 import { X, Play, FileCode } from 'lucide-react';
 import { getFileIcon } from '../../utils/fileIcons';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 export const EditorArea = () => {
+  const isMobile = useIsMobile();
   const {
     activeFileId, openFileIds, openFileById, closeFile,
     files, handleEditorChange, runCode, awarenessUsers
@@ -89,9 +91,9 @@ export const EditorArea = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                padding: '6px 12px',
-                minWidth: 120,
-                maxWidth: 200,
+                padding: isMobile ? '6px 8px' : '6px 12px',
+                minWidth: isMobile ? 96 : 120,
+                maxWidth: isMobile ? 160 : 200,
                 borderRight: '1px solid #1e1e1e',
                 cursor: 'pointer',
                 position: 'relative',
@@ -154,8 +156,12 @@ export const EditorArea = () => {
             defaultValue={activeFile.content || ''}
             onMount={handleEditorMount}
             options={{
-              fontSize: 14,
-              minimap: { enabled: true },
+              fontSize: isMobile ? 13 : 14,
+              minimap: { enabled: !isMobile },
+              lineNumbersMinChars: isMobile ? 3 : 5,
+              glyphMargin: !isMobile,
+              folding: !isMobile,
+              lineDecorationsWidth: isMobile ? 4 : 10,
               scrollBeyondLastLine: false,
               automaticLayout: true,
               padding: { top: 10 },

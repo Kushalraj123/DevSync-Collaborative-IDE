@@ -13,7 +13,9 @@ export const EditorProvider = ({ children, template }) => {
   const [roomId] = useState('hackathon-2026');
   
   const [activeSidebarTab, setActiveSidebarTab] = useState('explorer');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
   const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
   const [bottomPanelTab, setBottomPanelTab] = useState('terminal');
   const [awarenessUsers, setAwarenessUsers] = useState([]);

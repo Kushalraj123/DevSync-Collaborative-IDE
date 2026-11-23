@@ -87,22 +87,8 @@ export const TopBar = () => {
 
   return (
     <>
-      {/* Desktop VS Code Menu Bar */}
-      <div className="title-bar hidden md:flex h-[30px] bg-[#1e1e1e] items-center px-3 border-b border-[#2d2d2d] select-none text-[13px] text-[#cccccc]">
-        <Hexagon size={16} className="text-[#007acc] mr-3 ml-1 shrink-0" fill="#007acc" />
-        
-        <DropdownMenu label="File" items={fileMenu} isOpen={openMenu === 'File'} onToggle={() => toggleMenu('File')} closeAll={closeAll} />
-        <DropdownMenu label="Edit" items={editMenu} isOpen={openMenu === 'Edit'} onToggle={() => toggleMenu('Edit')} closeAll={closeAll} />
-        <DropdownMenu label="Selection" items={selectionMenu} isOpen={openMenu === 'Selection'} onToggle={() => toggleMenu('Selection')} closeAll={closeAll} />
-        <DropdownMenu label="View" items={viewMenu} isOpen={openMenu === 'View'} onToggle={() => toggleMenu('View')} closeAll={closeAll} />
-        <div className="px-2 py-1 hover:bg-[#2a2d2e] rounded cursor-pointer transition-colors" onClick={closeAll}>Go</div>
-        <DropdownMenu label="Run" items={runMenu} isOpen={openMenu === 'Run'} onToggle={() => toggleMenu('Run')} closeAll={closeAll} />
-        <DropdownMenu label="Terminal" items={terminalMenu} isOpen={openMenu === 'Terminal'} onToggle={() => toggleMenu('Terminal')} closeAll={closeAll} />
-        <div className="px-2 py-1 hover:bg-[#2a2d2e] rounded cursor-pointer transition-colors" onClick={closeAll}>Help</div>
-      </div>
-
-      {/* Mobile Compact Header Bar */}
-      <div className="flex md:hidden h-[42px] shrink-0 bg-[#1e1e1e] items-center justify-between px-2.5 border-b border-[#2d2d2d] select-none text-[13px] text-[#cccccc] gap-2">
+      {/* Mobile Quick Action Header Bar */}
+      <div className="flex md:hidden h-[40px] shrink-0 bg-[#1e1e1e] items-center justify-between px-2.5 border-b border-[#2d2d2d] select-none text-[13px] text-[#cccccc] gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => setIsSidebarOpen(prev => !prev)}
@@ -155,6 +141,20 @@ export const TopBar = () => {
             <TerminalIcon size={16} />
           </button>
         </div>
+      </div>
+
+      {/* Menu Bar (Desktop & Horizontally Scrollable on Mobile) */}
+      <div className="title-bar flex h-[32px] md:h-[30px] bg-[#1e1e1e] items-center px-2 md:px-3 border-b border-[#2d2d2d] select-none text-[12px] md:text-[13px] text-[#cccccc] overflow-x-auto no-scrollbar whitespace-nowrap">
+        <Hexagon size={16} className="hidden md:block text-[#007acc] mr-3 ml-1 shrink-0" fill="#007acc" />
+        
+        <DropdownMenu label="File" items={fileMenu} isOpen={openMenu === 'File'} onToggle={() => toggleMenu('File')} closeAll={closeAll} />
+        <DropdownMenu label="Edit" items={editMenu} isOpen={openMenu === 'Edit'} onToggle={() => toggleMenu('Edit')} closeAll={closeAll} />
+        <DropdownMenu label="Selection" items={selectionMenu} isOpen={openMenu === 'Selection'} onToggle={() => toggleMenu('Selection')} closeAll={closeAll} />
+        <DropdownMenu label="View" items={viewMenu} isOpen={openMenu === 'View'} onToggle={() => toggleMenu('View')} closeAll={closeAll} />
+        <div className="px-2 py-1 hover:bg-[#2a2d2e] rounded cursor-pointer transition-colors shrink-0" onClick={closeAll}>Go</div>
+        <DropdownMenu label="Run" items={runMenu} isOpen={openMenu === 'Run'} onToggle={() => toggleMenu('Run')} closeAll={closeAll} />
+        <DropdownMenu label="Terminal" items={terminalMenu} isOpen={openMenu === 'Terminal'} onToggle={() => toggleMenu('Terminal')} closeAll={closeAll} />
+        <div className="px-2 py-1 hover:bg-[#2a2d2e] rounded cursor-pointer transition-colors shrink-0" onClick={closeAll}>Help</div>
       </div>
     </>
   );

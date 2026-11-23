@@ -1,18 +1,72 @@
 const express = require('express');
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const WebSocket = require('ws');
+const { setupWSConnection } = require('y-websocket/bin/utils');
 
 const app = express();
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
+  : '*';
+
+app.use(cors({ origin: allowedOrigins }));
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Serve built Vite frontend if dist/ exists; otherwise respond with backend status (e.g. Render backend-only deploy)
+const distPath = path.resolve(__dirname, '..', 'dist');
+if (fs.existsSync(path.join(distPath, 'index.html'))) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/socket.io') || req.path.startsWith('/yjs')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  app.get('/', (_req, res) => {
+    res.status(200).json({
+      service: 'DevSync Backend',
+      status: 'ok',
+      endpoints: {
+        health: '/health',
+        socketIO: '/socket.io',
+        yjs: '/yjs/:roomId',
+      },
+    });
+  });
+}
 
 const server = http.createServer(app);
 
-// Setup Socket.IO for chat and basic presence
+// Setup Socket.IO for chat, presence, and room signaling
 const io = new Server(server, {
+  destroyUpgrade: false,
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
     methods: ["GET", "POST"]
+  }
+});
+
+// Setup Yjs CRDT WebSocket server on the same HTTP server under /yjs
+const wss = new WebSocket.Server({ noServer: true });
+wss.on('connection', (conn, req) => {
+  setupWSConnection(conn, req, { gc: true });
+});
+
+server.on('upgrade', (request, socket, head) => {
+  const { pathname } = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  if (pathname.startsWith('/yjs')) {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  } else if (!pathname.startsWith('/socket.io')) {
+    socket.destroy();
   }
 });
 
@@ -113,4 +167,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5005;
-server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => console.log(`DevSync server listening on port ${PORT}`));

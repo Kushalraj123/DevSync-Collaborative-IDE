@@ -5,7 +5,8 @@ export const initSocket = async () => {
     'force new connection': true,
     reconnectionAttempt: 'Infinity',
     timeout: 10000,
-    transports: ['websocket'],
+    transports: ['websocket', 'polling'],
   };
-  return io(window.location.origin, options);
+  const backendUrl = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '');
+  return io(backendUrl || window.location.origin, options);
 };

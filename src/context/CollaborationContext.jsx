@@ -29,9 +29,18 @@ export const CollaborationProvider = ({ children, roomId, email }) => {
   useEffect(() => {
     if (!roomId || !email) return;
 
-    // Connect to the local y-websocket server via Vite proxy
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/yjs`;
+    // Connect to Yjs WebSocket server (Render backend via VITE_BACKEND_URL in split deploy, or Vite proxy locally)
+    const explicitWsUrl = (import.meta.env.VITE_YJS_WS_URL || '').replace(/\/+$/, '');
+    const backendUrl = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/+$/, '');
+    let wsUrl;
+    if (explicitWsUrl) {
+      wsUrl = explicitWsUrl;
+    } else if (backendUrl) {
+      wsUrl = `${backendUrl.replace(/^http/i, 'ws')}/yjs`;
+    } else {
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${wsProtocol}//${window.location.host}/yjs`;
+    }
     
     const wsProvider = new WebsocketProvider(
       wsUrl, 

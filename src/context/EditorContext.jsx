@@ -7,6 +7,15 @@ const EditorContext = createContext();
 
 export const useEditor = () => useContext(EditorContext);
 
+const DEFAULT_EDITOR_SETTINGS = {
+  fontSize: 14,
+  tabSize: 2,
+  wordWrap: 'on',
+  minimap: true,
+  theme: 'vs-dark',
+  cursorBlinking: 'smooth',
+};
+
 export const EditorProvider = ({ children, template }) => {
   const socketRef = useRef(null);
   const [clients, setClients] = useState([]);
@@ -19,6 +28,32 @@ export const EditorProvider = ({ children, template }) => {
   const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
   const [bottomPanelTab, setBottomPanelTab] = useState('terminal');
   const [awarenessUsers, setAwarenessUsers] = useState([]);
+
+  const [editorSettings, setEditorSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('devsync_editor_settings');
+      return saved ? { ...DEFAULT_EDITOR_SETTINGS, ...JSON.parse(saved) } : DEFAULT_EDITOR_SETTINGS;
+    } catch {
+      return DEFAULT_EDITOR_SETTINGS;
+    }
+  });
+
+  const updateEditorSetting = useCallback((key, value) => {
+    setEditorSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      try {
+        localStorage.setItem('devsync_editor_settings', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const resetEditorSettings = useCallback(() => {
+    setEditorSettings(DEFAULT_EDITOR_SETTINGS);
+    try {
+      localStorage.removeItem('devsync_editor_settings');
+    } catch {}
+  }, []);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -376,6 +411,7 @@ export const EditorProvider = ({ children, template }) => {
     emitFileSystemUpdate, handleEditorChange, runCode,
     openFile, openFolder, sendTerminalCommand,
     startVoiceCall, incomingCall, setIncomingCall,
+    editorSettings, updateEditorSetting, resetEditorSettings,
     socketRef
   };
 

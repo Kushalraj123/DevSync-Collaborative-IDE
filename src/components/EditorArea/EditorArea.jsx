@@ -12,7 +12,8 @@ export const EditorArea = () => {
   const isMobile = useIsMobile();
   const {
     activeFileId, openFileIds, openFileById, closeFile,
-    files, handleEditorChange, runCode, awarenessUsers, username
+    files, handleEditorChange, runCode, awarenessUsers, username,
+    editorSettings
   } = useEditor();
   
   const { ydoc, awareness } = useCollaboration();
@@ -151,13 +152,14 @@ export const EditorArea = () => {
           <Editor
             key={activeFileId}
             height="100%"
-            theme="vs-dark"
+            theme={editorSettings?.theme || 'vs-dark'}
             language={getLanguage(activeFile.name)}
             defaultValue={activeFile.content || ''}
             onMount={handleEditorMount}
             options={{
-              fontSize: isMobile ? 13 : 14,
-              minimap: { enabled: !isMobile },
+              fontSize: editorSettings?.fontSize ?? (isMobile ? 13 : 14),
+              tabSize: editorSettings?.tabSize ?? 2,
+              minimap: { enabled: !isMobile && (editorSettings?.minimap ?? true) },
               lineNumbersMinChars: isMobile ? 3 : 5,
               glyphMargin: !isMobile,
               folding: !isMobile,
@@ -165,10 +167,10 @@ export const EditorArea = () => {
               scrollBeyondLastLine: false,
               automaticLayout: true,
               padding: { top: 10 },
-              cursorBlinking: 'smooth',
+              cursorBlinking: editorSettings?.cursorBlinking || 'smooth',
               smoothScrolling: true,
-              lineHeight: 20,
-              wordWrap: 'on',
+              lineHeight: Math.round((editorSettings?.fontSize ?? 14) * 1.45),
+              wordWrap: editorSettings?.wordWrap || 'on',
             }}
           />
         ) : (

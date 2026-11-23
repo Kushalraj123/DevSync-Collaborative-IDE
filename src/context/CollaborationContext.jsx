@@ -81,6 +81,7 @@ export const CollaborationProvider = ({ children, roomId, email }) => {
       awareness,
       connected,
       sharedFiles,
+      roomId,
       username: email // Export email as 'username' to avoid breaking consumer components
     }}>
       {awareness ? children : (

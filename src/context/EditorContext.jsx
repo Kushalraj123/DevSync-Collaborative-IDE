@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { initSocket } from '../utils/socket';
 import { executeCode } from '../utils/compiler';
 import { useCollaboration } from './CollaborationContext';
+import { useAuth } from './AuthContext';
 
 const EditorContext = createContext();
 
@@ -19,7 +20,6 @@ const DEFAULT_EDITOR_SETTINGS = {
 export const EditorProvider = ({ children, template }) => {
   const socketRef = useRef(null);
   const [clients, setClients] = useState([]);
-  const [roomId] = useState('hackathon-2026');
   
   const [activeSidebarTab, setActiveSidebarTab] = useState('explorer');
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
@@ -28,6 +28,10 @@ export const EditorProvider = ({ children, template }) => {
   const [isBottomPanelOpen, setIsBottomPanelOpen] = useState(false);
   const [bottomPanelTab, setBottomPanelTab] = useState('terminal');
   const [awarenessUsers, setAwarenessUsers] = useState([]);
+
+  const { sharedFiles, ydoc, provider, awareness, username: email, roomId: collabRoomId } = useCollaboration();
+  const { isHost } = useAuth();
+  const roomId = collabRoomId || 'hackathon-2026';
 
   const [editorSettings, setEditorSettings] = useState(() => {
     try {
@@ -58,7 +62,6 @@ export const EditorProvider = ({ children, template }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   
-  const { sharedFiles, ydoc, awareness, username: email } = useCollaboration();
   const globalState = ydoc.getMap('globalState');
   const yMessages = ydoc.getArray('messages');
   
@@ -84,10 +87,11 @@ export const EditorProvider = ({ children, template }) => {
   useEffect(() => {
     if (!sharedFiles) return;
 
-    const updateReactFiles = () => {
+    const updateReactFiles = (allowSeed = false) => {
       const filesArray = Array.from(sharedFiles.values());
       
       if (filesArray.length === 0) {
+        if (!allowSeed) return;
         // Initialize default files if room is empty based on selected template
         let defaultFiles = [];
         if (template && template.files && template.files.length > 0) {
@@ -141,16 +145,14 @@ export const EditorProvider = ({ children, template }) => {
             }
           });
         });
+        setFiles(Array.from(sharedFiles.values()));
       } else {
         setFiles(filesArray);
       }
     };
 
-    // Initial load
-    updateReactFiles();
-
-    const observer = (event) => {
-      updateReactFiles();
+    const observer = () => {
+      updateReactFiles(false);
     };
     
     const stateObserver = (event) => {
@@ -177,16 +179,25 @@ export const EditorProvider = ({ children, template }) => {
     sharedFiles.observe(observer);
     globalState.observe(stateObserver);
     yMessages.observe(messagesObserver);
-    
-    // Initial load
+
+    // Initial load: hosts seed immediately if room is empty; guests wait for Yjs sync so they don't overwrite the host's template
+    updateReactFiles(isHost || Boolean(provider?.synced));
     messagesObserver();
+
+    const handleSync = (isSynced) => {
+      if (isSynced) {
+        updateReactFiles(true);
+      }
+    };
+    provider?.on?.('sync', handleSync);
 
     return () => {
       sharedFiles.unobserve(observer);
       globalState.unobserve(stateObserver);
       yMessages.unobserve(messagesObserver);
+      provider?.off?.('sync', handleSync);
     };
-  }, [sharedFiles, ydoc, globalState, yMessages]);
+  }, [sharedFiles, ydoc, provider, globalState, yMessages, isHost, template]);
   
   const [activeFileId, setActiveFileId] = useState('1');
   const [openFileIds, setOpenFileIds] = useState(['1', '2']);

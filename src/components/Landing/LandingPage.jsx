@@ -34,19 +34,25 @@ export const LandingPage = ({ onEnter }) => {
   const [joinEmail, setJoinEmail] = useState('');
 
   // Check if joining from a shared link (e.g. ?room=xxx&interview=1)
+  // On page reload, always return cleanly to the Home screen instead of Join a Workspace
   useEffect(() => {
+    const navEntry = performance.getEntriesByType?.('navigation')?.[0];
+    const isReload = navEntry?.type === 'reload' || performance?.navigation?.type === 1;
     const params = new URLSearchParams(window.location.search);
     const roomParam = params.get('room');
     const interviewParam = params.get('interview');
-    if (roomParam) {
+
+    if (roomParam && !isReload) {
       setJoinInput(roomParam);
       if (interviewParam === '1') setIsInterviewMode(true);
       setStep('join');
     } else {
-      // Clean URL — remove any leftover ?room or ?interview params
+      // Clean URL — remove any leftover ?room or ?interview params and show Home screen
       const cleanUrl = window.location.origin + window.location.pathname;
       window.history.replaceState({}, '', cleanUrl);
+      setJoinInput('');
       setIsInterviewMode(false);
+      setStep('home');
     }
   }, []);
 
@@ -425,7 +431,13 @@ export const LandingPage = ({ onEnter }) => {
             style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 460, width: '90%' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button onClick={() => setStep('home')} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', padding: 4 }}><X size={20} /></button>
+              <button onClick={() => {
+                const cleanUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, '', cleanUrl);
+                setJoinInput('');
+                setIsInterviewMode(false);
+                setStep('home');
+              }} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', padding: 4 }}><X size={20} /></button>
               <div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: 'white' }}>Join a Workspace</div>
                 <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Paste your invite link or room code</div>

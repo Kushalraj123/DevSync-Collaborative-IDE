@@ -192,12 +192,14 @@ export const ActivityBar = () => {
             </div>
 
             <div className="flex flex-col gap-2">
-              <button
-                onClick={handleCopyInvite}
-                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-[#007acc] hover:bg-[#0062a3] text-white font-medium text-[12px] cursor-pointer transition-colors"
-              >
-                {copied ? <><Check size={14} /> Invite Link Copied!</> : <><Copy size={14} /> Copy Invite Link</>}
-              </button>
+              {(isHost || userRole === 'admin') && (
+                <button
+                  onClick={handleCopyInvite}
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-[#007acc] hover:bg-[#0062a3] text-white font-medium text-[12px] cursor-pointer transition-colors"
+                >
+                  {copied ? <><Check size={14} /> Invite Link Copied!</> : <><Copy size={14} /> Copy Invite Link</>}
+                </button>
+              )}
               <button
                 onClick={handleLeaveWorkspace}
                 className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded bg-[#3a2020] hover:bg-[#522727] text-[#f87171] border border-[#f8717140] font-medium text-[12px] cursor-pointer transition-colors"

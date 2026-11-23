@@ -12,7 +12,7 @@ export const EditorArea = () => {
   const isMobile = useIsMobile();
   const {
     activeFileId, openFileIds, openFileById, closeFile,
-    files, handleEditorChange, runCode, awarenessUsers
+    files, handleEditorChange, runCode, awarenessUsers, username
   } = useEditor();
   
   const { ydoc, awareness } = useCollaboration();
@@ -178,11 +178,36 @@ export const EditorArea = () => {
           </div>
         )}
       </div>
-      {/* Hide cursors of viewers */}
+      {/* Per-user cursor colors matching LIVE SESSION member dots + hide cursors of viewers */}
       <style>
-        {awarenessUsers && awarenessUsers.filter(u => u.role === 'viewer').map(u => (
-          `.yRemoteSelection-${u.clientId}, .yRemoteSelectionHead-${u.clientId} { display: none !important; }`
-        )).join('\n')}
+        {(() => {
+          const rules = [];
+          const myClientId = awareness?.clientID;
+          const myUser = awarenessUsers?.find(
+            (u) => (myClientId != null && u.clientId === myClientId) || u.name === username
+          );
+          if (myUser?.color) {
+            rules.push(
+              `.monaco-editor .cursors-layer .cursor { background-color: ${myUser.color} !important; border-color: ${myUser.color} !important; }`
+            );
+          }
+          if (awarenessUsers) {
+            awarenessUsers.forEach((u) => {
+              if (u.role === 'viewer') {
+                rules.push(
+                  `.yRemoteSelection-${u.clientId}, .yRemoteSelectionHead-${u.clientId} { display: none !important; }`
+                );
+              } else if (u.color) {
+                rules.push(
+                  `.yRemoteSelection-${u.clientId} { background-color: color-mix(in srgb, ${u.color} 30%, transparent) !important; }`,
+                  `.yRemoteSelectionHead-${u.clientId} { border-color: ${u.color} !important; }`,
+                  `.yRemoteSelectionHead-${u.clientId}::after { border-color: ${u.color} !important; background-color: ${u.color} !important; }`
+                );
+              }
+            });
+          }
+          return rules.join('\n');
+        })()}
       </style>
     </div>
   );

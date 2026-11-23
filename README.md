@@ -12,7 +12,16 @@
 </p>
 
 <p align="center">
-  <strong>DevSync</strong> is a high-performance, real-time collaborative cloud IDE tailored for remote engineering teams, technical hiring interviews, pair programming, and coding education. Featuring conflict-free multi-cursor editing, peer-to-peer video/audio calling, instant code execution across 10+ languages, live web previews, and structured interview evaluation tools.
+  <strong>DevSync</strong> is a high-performance, real-time collaborative cloud IDE tailored for remote engineering teams, technical hiring interviews, pair programming, and coding education. Featuring conflict-free multi-cursor editing with member-matched blinking cursors, peer-to-peer video/audio calling, instant code execution across 10+ languages, live web previews, responsive mobile editing, and structured interview evaluation tools.
+</p>
+
+<p align="center">
+  <a href="https://dev-sync-dusky.vercel.app" target="_blank">
+    <img src="https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo on Vercel" />
+  </a>
+  <a href="https://devsync-collaborative-ide.onrender.com/health" target="_blank">
+    <img src="https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Backend on Render" />
+  </a>
 </p>
 
 ---
@@ -26,11 +35,12 @@
   - [5. Instant Live Web Preview](#5-instant-live-web-preview)
   - [6. Virtual File System & Global Search](#6-virtual-file-system--global-search)
   - [7. Host Security & Granular Access Control](#7-host-security--granular-access-control)
+  - [8. Mobile-Responsive IDE Experience](#8-mobile-responsive-ide-experience)
 - [🏗️ System Architecture](#️-system-architecture)
 - [🛠️ Tech Stack](#️-tech-stack)
 - [🚀 Quickstart & Local Setup](#-quickstart--local-setup)
 - [📁 Project Structure](#-project-structure)
-- [🌐 Deployment & Tunneling](#-deployment--tunneling)
+- [🌐 Deployment (Render + Vercel) & Tunneling](#-deployment-render--vercel--tunneling)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
 
@@ -40,7 +50,7 @@
 
 ### 1. Real-Time Multi-Cursor Collaboration
 - **Zero-Conflict Synchronization:** Powered by **Yjs CRDTs (Conflict-free Replicated Data Types)** with WebSocket relays for sub-millisecond updates across all connected peers.
-- **Dynamic Presence & Colored Cursors:** Deterministic hash-based colors for every collaborator with live user badges and live selection highlighting.
+- **Member-Matched Blinking Cursors & Presence:** Deterministic hash-based colors for every collaborator—both your local blinking cursor and every remote collaborator's blinking cursor and selection highlight match the exact colored dot beside their name in the Live Session panel.
 - **Monaco Editor Core:** Full VS Code editing power — syntax highlighting, bracket matching, intellisense, multi-selection, and code folding.
 
 ### 2. Integrated WebRTC Voice & Video Calling
@@ -70,13 +80,18 @@
 - **Lobby & Join Approvals:** Room hosts can approve or reject incoming join requests.
 - **Role-Based Permissions:** Grant `Editor` (read/write) or `Viewer` (read-only) permissions dynamically to participants to prevent tampering during demos or exams.
 
+### 8. Mobile-Responsive IDE Experience
+- **Slide-Over Explorer Drawer:** Automatically collapses the sidebar on mobile viewports (`< 768px`) so the editor fills the screen, opening as an overlay drawer with backdrop and auto-close on file selection.
+- **Compact Mobile Header & Scrollable Menu Bar:** Quick-access **Sidebar**, **Run**, **Live Preview**, and **Terminal** controls paired with a horizontally scrollable `File / Edit / Selection / View / Go / Run / Terminal / Help` bar and viewport-clamped dropdowns.
+- **Touch-Optimized Editor:** Disables the Monaco minimap and extra gutters on narrow screens and uses `100dvh` framing so mobile browser chrome never clips the status bar.
+
 ---
 
 ## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    subgraph Client["DevSync Client (Browser)"]
+    subgraph Client["DevSync Frontend (Vercel / Browser)"]
         UI["React 19 + Tailwind CSS"]
         Monaco["Monaco Editor (VS Code)"]
         YMonaco["y-monaco Binding"]
@@ -84,9 +99,10 @@ graph TD
         InterviewModule["Interview & Notes Module"]
     end
 
-    subgraph Relays["Real-Time Backend Services"]
-        YjsServer["Yjs WebSocket Server (:1234)<br/>CRDT State Synchronization"]
-        SocketServer["Socket.IO Server (:5005)<br/>Presence, Signaling & Permissions"]
+    subgraph Backend["Unified Real-Time Backend (Render / Node.js :5005)"]
+        Express["Express HTTP Server + /health"]
+        YjsServer["Yjs WebSocket Upgrade (/yjs/*)<br/>CRDT State Synchronization"]
+        SocketServer["Socket.IO Server (/socket.io)<br/>Presence, Chat & Permissions"]
     end
 
     subgraph Execution["Remote Execution Sandbox"]
@@ -97,7 +113,7 @@ graph TD
     Monaco <--> YMonaco
     YMonaco <--> YjsServer
     UI <--> SocketServer
-    WebRTCClient <--> SocketServer
+    WebRTCClient <--> YjsServer
     UI --> Judge0
 ```
 
@@ -131,29 +147,27 @@ cd DevSync-Collaborative-IDE
 ```
 
 ### 2. Install Dependencies
-Install frontend and server dependencies:
+Install frontend and standalone server dependencies:
 ```bash
 npm install
-cd server && npm install && cd ..
+npm --prefix server install
 ```
 
 ### 3. Run the Development Environment
 
-#### Option A: Run All Services Simultaneously (Recommended)
+`server/server.js` runs both the **Socket.IO server** (`/socket.io`) and the **Yjs CRDT WebSocket server** (`/yjs/*`) on port `5005`, and `vite.config.js` proxies both automatically.
+
+#### Option A: Run Backend + Frontend Simultaneously (Recommended)
 ```bash
-npm run share
+npx concurrently "npm run server" "npm run dev"
 ```
-*(Runs the Signaling Server, Yjs WebSocket Server, and Vite Frontend concurrently)*
 
-#### Option B: Run Services Manually in Separate Terminals
+#### Option B: Run in Separate Terminals
 ```bash
-# Terminal 1: Start Yjs CRDT WebSocket Server
-node server/yjs-server.js
+# Terminal 1: Start Unified Backend Server (Socket.IO + Yjs on :5005)
+npm run server
 
-# Terminal 2: Start Socket.IO Signaling & Room Server
-node server/server.js
-
-# Terminal 3: Start Frontend Dev Server
+# Terminal 2: Start Frontend Dev Server (Vite on :5173)
 npm run dev
 ```
 
@@ -166,48 +180,71 @@ Navigate to `http://localhost:5173` to open DevSync!
 ```text
 DevSync-Collaborative-IDE/
 ├── server/
-│   ├── server.js              # Socket.IO signaling, presence & permissions
-│   ├── yjs-server.js          # Yjs CRDT WebSocket relay server
-│   └── package.json           # Server dependencies
+│   ├── server.js              # Unified Express, Socket.IO & Yjs WebSocket server (+ /health)
+│   ├── yjs-server.js          # Optional standalone Yjs CRDT relay server
+│   └── package.json           # Standalone server dependencies (deployed on Render)
 ├── src/
 │   ├── assets/                # Static assets, branding, and icons
 │   ├── components/
-│   │   ├── ActivityBar/       # Leftmost icon navigation bar
+│   │   ├── ActivityBar/       # Leftmost icon navigation bar with sidebar toggle
 │   │   ├── BottomPanel/       # Thunder terminal, live preview & output tabs
-│   │   ├── EditorArea/        # Monaco editor, tabs, and collaborative cursors
+│   │   ├── EditorArea/        # Monaco editor, tabs, and color-matched blinking cursors
 │   │   ├── Interview/         # Interview question runner & private notes
-│   │   ├── Landing/           # Landing page with instant room creation
+│   │   ├── Landing/           # Landing page with instant room creation & templates
 │   │   ├── Modals/            # Video call modal, permission alerts & join requests
-│   │   ├── Sidebar/           # File explorer, search, live users & extensions
-│   │   ├── StatusBar/         # Bottom status bar with role, branch & language info
-│   │   └── TopBar/            # Header controls, share buttons, theme switcher & call
-│   ├── context/               # Global React context (Rooms, Users, Settings)
-│   ├── hooks/                 # Custom WebRTC & Collaboration hooks
-│   ├── utils/                 # Hash generators, language mappings & API helpers
+│   │   ├── Sidebar/           # File explorer, search, live users & extensions (mobile drawer)
+│   │   ├── StatusBar/         # Responsive bottom status bar
+│   │   └── TopBar/            # Desktop menu bar & mobile quick-action header
+│   ├── context/               # Global React context (Rooms, Collaboration, Auth, Editor)
+│   ├── hooks/                 # Custom WebRTC (useWebRTC) & responsive (useIsMobile) hooks
+│   ├── utils/                 # Socket client, Judge0 compiler, file icons & file system
 │   ├── App.jsx                # Root application layout & state machine
-│   ├── index.css              # Global styles & Monaco theme overrides
+│   ├── index.css              # Global styles, mobile viewport & cursor animations
 │   └── main.jsx               # React entrypoint
 ├── public/                    # Static public assets
+├── .env.example               # Frontend environment variable template (VITE_BACKEND_URL)
+├── render.yaml                # Render Blueprint config for standalone backend deployment
+├── vercel.json                # Vercel config for Vite frontend & SPA rewrites
 ├── package.json               # Root dependencies & scripts
-├── vite.config.js             # Vite configuration
+├── vite.config.js             # Vite configuration & dev WebSocket proxies
 └── README.md                  # Project documentation
 ```
 
 ---
 
-## 🌐 Deployment & Tunneling
+## 🌐 Deployment (Render + Vercel) & Tunneling
 
-To share your local instance over the internet for remote testing:
+DevSync is pre-configured for split production hosting with the **Backend on Render** and the **Frontend on Vercel**.
+
+### 1. Deploy Backend on Render
+1. Go to [Render Blueprints](https://dashboard.render.com/blueprints) → **New Blueprint Instance** → select this repository.
+   - Or create a **Web Service** manually with:
+     - **Root Directory:** `server`
+     - **Build Command:** `npm install`
+     - **Start Command:** `npm start`
+     - **Health Check Path:** `/health`
+2. Verify your live backend at `https://<your-render-service>.onrender.com/health` (`{"status":"ok"}`).
+
+### 2. Deploy Frontend on Vercel
+1. Go to [Vercel New Project](https://vercel.com/new) → import this repository (leave **Root Directory** at the repo root; `vercel.json` is auto-detected).
+2. Add the Environment Variable (see `.env.example`):
+   ```env
+   VITE_BACKEND_URL=https://<your-render-service>.onrender.com
+   ```
+3. Click **Deploy**. *(Optional: set `CORS_ORIGIN` on Render to your Vercel URL to restrict origins.)*
+
+### Local Tunneling (Quick Testing)
+To share a local dev instance over the internet:
 
 ```bash
-# Using Pinggy Tunnel:
-ssh -p 443 -R0:localhost:5173 a.pinggy.io -o StrictHostKeyChecking=no
-
 # Using Cloudflare Tunnel:
 cloudflared tunnel --url http://localhost:5173
 
-# Using Localtunnel:
+# Using Localtunnel (or `npm run share`):
 npx localtunnel --port 5173
+
+# Using Pinggy Tunnel:
+ssh -p 443 -R0:localhost:5173 a.pinggy.io -o StrictHostKeyChecking=no
 ```
 
 ---

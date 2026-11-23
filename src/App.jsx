@@ -460,7 +460,18 @@ const ProtectedContent = ({ session }) => {
   }, [awareness, userRole]);
 
   if (!isAuthorized && !isHost) {
-    return <WaitingRoom email={session.email} status={status} onRetry={() => window.location.reload()} />;
+    return (
+      <WaitingRoom
+        email={session.email}
+        status={status}
+        onRetry={() => {
+          try {
+            sessionStorage.removeItem(`devsync_session_${session.roomId}`);
+          } catch (_) {}
+          window.location.reload();
+        }}
+      />
+    );
   }
 
   return (
@@ -479,14 +490,31 @@ const AppContent = ({ session }) => {
 };
 
 export default function App() {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get('room');
+      if (!roomParam) return null;
+      const saved = sessionStorage.getItem(`devsync_session_${roomParam}`);
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.roomId === roomParam && parsed.email) {
+        return parsed;
+      }
+    } catch (_) {}
+    return null;
+  });
 
   const handleEnter = ({ roomId, email, displayName, template, isHost, isInterviewMode }) => {
+    const nextSession = { roomId, email, displayName, template, isHost, isInterviewMode };
+    try {
+      sessionStorage.setItem(`devsync_session_${roomId}`, JSON.stringify(nextSession));
+    } catch (_) {}
     const url = new URL(window.location.href);
     url.searchParams.set('room', roomId);
     if (isInterviewMode) url.searchParams.set('interview', '1');
     window.history.replaceState({}, '', url.toString());
-    setSession({ roomId, email, displayName, template, isHost, isInterviewMode });
+    setSession(nextSession);
   };
 
   if (!session) {

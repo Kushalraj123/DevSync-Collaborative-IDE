@@ -74,6 +74,9 @@ export const ActivityBar = () => {
 
   const handleLeaveWorkspace = () => {
     if (window.confirm('Leave this collaborative workspace?')) {
+      try {
+        if (roomId) sessionStorage.removeItem(`devsync_session_${roomId}`);
+      } catch (_) {}
       window.location.href = `${window.location.origin}${window.location.pathname}`;
     }
   };
